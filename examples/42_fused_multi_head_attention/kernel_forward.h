@@ -130,7 +130,7 @@ struct AttentionKernel {
     int32_t num_heads;
 
     CUTLASS_HOST_DEVICE int32_t o_strideM() const {
-      return head_dim_value;
+      return head_dim_value * num_heads;
     }
     // Moves pointers to what we should process
     // Returns "false" if there is no work to do
