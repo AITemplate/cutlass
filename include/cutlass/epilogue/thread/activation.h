@@ -54,8 +54,10 @@ template <typename T>
 struct LinearCombinationGenericParams {
   T alpha;                  ///< scales accumulators
   T beta;                   ///< scales source tensor
+  T alpha1;                 ///< scales activation results
   T const *alpha_ptr;       ///< pointer to accumulator scalar - if not null, loads it from memory
   T const *beta_ptr;        ///< pointer to source scalar - if not null, loads it from memory
+  T const *alpha1_ptr;      ///< pointer to activation result scalar - if not null, loads it from memory
 
   //
   // Methods
@@ -65,20 +67,24 @@ struct LinearCombinationGenericParams {
   LinearCombinationGenericParams():
     alpha(T(1)),
     beta(T(0)),
+    alpha1(T(1)),
     alpha_ptr(nullptr),
-    beta_ptr(nullptr) { }
+    beta_ptr(nullptr),
+    alpha1_ptr(nullptr) { }
 
   CUTLASS_HOST_DEVICE
   LinearCombinationGenericParams(
     T alpha,
-    T beta = T(0)
-  ): alpha(alpha), beta(beta), alpha_ptr(nullptr), beta_ptr(nullptr) { }
+    T beta = T(0),
+    T alpha1 = T(1)
+  ): alpha(alpha), beta(beta), alpha1(alpha1), alpha_ptr(nullptr), beta_ptr(nullptr), alpha1_ptr(nullptr) { }
 
   CUTLASS_HOST_DEVICE
   LinearCombinationGenericParams(
     T const *alpha_ptr,
-    T const *beta_ptr = nullptr
-  ): alpha(0), beta(0), alpha_ptr(alpha_ptr), beta_ptr(beta_ptr) { }
+    T const *beta_ptr = nullptr,
+    T const *alpha1_ptr = nullptr
+  ): alpha(0), beta(0), alpha1(0), alpha_ptr(alpha_ptr), beta_ptr(beta_ptr), alpha1_ptr(alpha1_ptr) { }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -183,7 +189,7 @@ struct LeakyReLU {
     Params():
       LinearCombinationGenericParams<T>(),
       leaky_alpha(T(1)) {}
- 
+
     CUTLASS_HOST_DEVICE
     Params(
       T alpha,
