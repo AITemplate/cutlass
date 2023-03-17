@@ -51,7 +51,7 @@ namespace thread {
 
 /// Applies a linear combination operator followed by an activation function to an array of elements.
 ///
-/// D = activation(alpha * accumulator + beta * source + uniform)
+/// D = alpha1 * activation(alpha * accumulator + beta * source + uniform)
 ///
 template <
   template<typename T> class ActivationFunctor,
@@ -102,6 +102,7 @@ public:
     params_ = params;
     params_.alpha = (params.alpha_ptr ? *params.alpha_ptr : params.alpha);
     params_.beta = (params.beta_ptr ? *params.beta_ptr : params.beta);
+    params_.alpha1 = (params.alpha1_ptr ? *params.alpha1_ptr : params.alpha1);
     skip_elementwise_ = false;
   }
 
@@ -129,7 +130,7 @@ public:
     }
   }
 
-  /// Computes linear scaling: D = alpha * accumulator + beta * source
+  /// Computes linear scaling: D = alpha1 * activation(alpha * accumulator + beta * source)
   CUTLASS_HOST_DEVICE
   FragmentOutput operator()(
     FragmentAccumulator const &accumulator,
@@ -160,7 +161,7 @@ public:
       intermediate = mul_add_accumulator(params_.alpha, converted_accumulator, intermediate);    // D = alpha * Accum + X
     }
 
-    intermediate = skip_elementwise_ ? intermediate : activation(intermediate, params_);
+    intermediate = skip_elementwise_ ? intermediate : mul_add_source(params_.alpha1, activation(intermediate, params_));
 
     // Convert to destination numeric type
     NumericArrayConverter<ElementOutput, ElementCompute, kCount, Round> destination_converter;
@@ -168,7 +169,7 @@ public:
     return destination_converter(intermediate);
   }
 
-  /// Computes linear scaling: D = alpha * accumulator
+  /// Computes linear scaling: D = alpha1 * alpha * accumulator
   CUTLASS_HOST_DEVICE
   FragmentOutput operator()(
     FragmentAccumulator const &accumulator) const {
@@ -191,7 +192,9 @@ public:
       intermediate = mul_add_accumulator(params_.alpha, converted_accumulator);    // D = alpha * Accum
     }
 
-    intermediate = skip_elementwise_ ? intermediate : activation(intermediate, params_);
+    intermediate = skip_elementwise_ ?
+        intermediate :
+        mul_add_accumulator(params_.alpha1, activation(intermediate, params_));
 
     // Convert to destination numeric type
     NumericArrayConverter<ElementOutput, ElementCompute, kCount, Round> destination_converter;
