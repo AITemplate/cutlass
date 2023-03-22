@@ -68,6 +68,7 @@ template <
 class LinearCombination {
 public:
 
+  using ElementSource = ElementSource_;
   using ElementOutput = ElementOutput_;
   using ElementAccumulator = ElementAccumulator_;
   using ElementCompute = ElementCompute_;
@@ -76,6 +77,7 @@ public:
 
   static int const kCount = Count;
   static const ScaleType::Kind kScale = Scale;
+  using FragmentSource = Array<ElementSource, kCount>;
   using FragmentOutput = Array<ElementOutput, kCount>;
   using FragmentAccumulator = Array<ElementAccumulator, kCount>;
   using ComputeFragment = Array<ElementCompute, kCount>;
@@ -187,10 +189,10 @@ public:
   CUTLASS_HOST_DEVICE
   FragmentOutput operator()(
     FragmentAccumulator const &accumulator,
-    FragmentOutput const &source) const {
+    FragmentSource const &source) const {
 
     // Convert source to interal compute numeric type
-    NumericArrayConverter<ElementCompute, ElementOutput, kCount, Round> source_converter;
+    NumericArrayConverter<ElementCompute, ElementSource, kCount, Round> source_converter;
     NumericArrayConverter<ElementCompute, ElementAccumulator, kCount, Round> accumulator_converter;
 
     // Convert to destination numeric type
